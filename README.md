@@ -78,7 +78,7 @@ Ensure the following are installed before setting up the project:
   cd backend
   npm start
 ```
-2. Start the Frontend Development Server (Runs on http://localhost:3000)
+2. Start the Frontend Development Server (Runs on http://localhost:5173)
 ```
   cd frontend
   npm run dev
