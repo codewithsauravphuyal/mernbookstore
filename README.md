@@ -37,17 +37,20 @@ Ensure the following are installed before setting up the project:
 ### Installation
 
 1. **Clone the Repository**
+   ```
    git clone https://github.com/codewithsauravphuyal/mernbookstore.git
    cd mernbookstore
-   
+   ```
 2.  **Install Frontend Dependencies**
+   ```
    cd frontend
    npm install
-
+   ```
 3. **Install Backend Dependencies**
+   ```
    cd backend 
    npm install
-   
+   ```
 4. **Environment Setup**
    Create a .env file in the /frontend directory with the following:
    ```env
@@ -69,6 +72,8 @@ Ensure the following are installed before setting up the project:
      CLOUDINARY_API_SECRET=your_cloudinary_api_secret
    ```
 ### Running the Application
+  ```
+
 1. Start the Backend Server (Runs on http://localhost:5000) 
   cd backend
   npm start
@@ -76,16 +81,19 @@ Ensure the following are installed before setting up the project:
 2. Start the Frontend Development Server (Runs on http://localhost:3000)
   cd frontend
   npm run dev
-
+  ```
 ### Available Scripts
 Frontend
+  ```
   In the /frontend directory: 
   npm run dev: Starts the Vite development server
-  npm run build: Builds the app for production 
+  npm run build: Builds the app for production
+   ```
 Backend 
+   ```
   In the /backend directory: 
   npm start: Starts the server with Node.js 
-
+   ```
 ### Contributing
 Contributions are welcome! To contribute:
   1. Fork the repository
