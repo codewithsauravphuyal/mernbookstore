@@ -102,7 +102,7 @@ const ManageBooks = () => {
                     >
                       <td className="px-6 py-4 text-base text-gray-700 border-b border-gray-200">{index + 1}</td>
                       <td className="px-6 py-4 text-base text-gray-900 border-b border-gray-200">{book.title}</td>
-                      <td className="px-6 py-4 text-base text-gray-700 border-b border-gray-200">{book.genre}</td>
+                      <td className="px-6 py-4 text-base text-gray-700 border-b border-gray-200">{book.category}</td> {/* Changed from book.genre to book.category */}
                       <td className="px-6 py-4 text-base text-gray-700 border-b border-gray-200">Rs {book.price}</td>
                       <td className="px-6 py-4 text-base border-b border-gray-200 space-x-4">
                         <button

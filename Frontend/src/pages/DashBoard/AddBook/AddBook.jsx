@@ -159,16 +159,19 @@ const AddBook = () => {
               label="Category"
               name="category"
               options={[
-                { value: '', label: 'Choose A Category' },
+                { value: '', label: 'Choose A Category', disabled: true }, // Disable the placeholder option
                 { value: 'Islam', label: 'Islam' },
                 { value: 'Philosophy', label: 'Philosophy' },
                 { value: 'Novels', label: 'Novels' },
                 { value: 'Science', label: 'Science' },
-                { value: 'Self-Help', label: 'Self Help' }, // Corrected case
+                { value: 'Self-Help', label: 'Self Help' },
               ]}
               register={register}
               error={errors.category}
-              validation={{ required: 'Category is required' }}
+              validation={{
+                required: 'Category is required',
+                validate: (value) => value !== '' || 'Please select a valid category', // Prevent empty string
+              }}
             />
             <motion.div
               className="flex items-center space-x-4"

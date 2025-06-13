@@ -10,6 +10,7 @@ import {
 import getBaseUrl from "../../../utils/getBaseUrl";
 import Loading from "../../../components/Loading";
 import InputField from "../AddBook/InputField";
+import SelectField from "../AddBook/SelectField"; // Import SelectField
 
 const UpdateBook = () => {
   const { id } = useParams();
@@ -28,7 +29,7 @@ const UpdateBook = () => {
     if (bookData) {
       setValue("title", bookData.title);
       setValue("author", bookData.author);
-      setValue("genre", bookData.genre);
+      setValue("category", bookData.category); // Changed from genre to category
       setValue("publicationDate", bookData.publicationDate?.split("T")[0] || "");
       setValue("price", bookData.price);
       setValue("description", bookData.description);
@@ -76,7 +77,7 @@ const UpdateBook = () => {
     const updateBookData = {
       title: data.title,
       author: data.author,
-      genre: data.genre,
+      category: data.category, // Changed from genre to category
       publicationDate: data.publicationDate || undefined,
       price: Number(data.price),
       coverImage: { url: coverImageUrl },
@@ -138,12 +139,23 @@ const UpdateBook = () => {
               rules={{ required: "Author is required" }}
             />
 
-            <InputField
-              label="Genre"
-              name="genre"
-              placeholder="Enter genre"
+            <SelectField
+              label="Category"
+              name="category"
+              options={[
+                { value: "", label: "Choose A Category", disabled: true },
+                { value: "Islam", label: "Islam" },
+                { value: "Philosophy", label: "Philosophy" },
+                { value: "Novels", label: "Novels" },
+                { value: "Science", label: "Science" },
+                { value: "Self-Help", label: "Self Help" },
+              ]}
               register={register}
-              error={errors.genre}
+              error={errors.category}
+              rules={{
+                required: "Category is required",
+                validate: (value) => value !== "" || "Please select a valid category",
+              }}
             />
 
             <InputField

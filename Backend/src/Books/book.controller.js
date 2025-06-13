@@ -4,15 +4,27 @@ const { uploadImage } = require("../utils/cloudinary");
 // Post a new book
 const postABook = async (req, res) => {
   try {
-    const { title, author, genre, publicationDate, price, description, trending, oldPrice } = req.body;
-    let coverImageUrl = req.body.coverImage?.url;
+    const { title, author, category, publicationDate, price, description, trending, oldPrice, coverImage } = req.body;
+    let coverImageUrl = coverImage?.url;
 
-    // Upload image if provided
+    // Validate required fields
+    if (!title || !author || !category || !price) {
+      return res.status(400).json({ message: "Title, author, category, and price are required" });
+    }
+
+    // Validate category against allowed values
+    const validCategories = ["Islam", "Philosophy", "Novels", "Science", "Self-Help"];
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({ message: `Category must be one of: ${validCategories.join(", ")}` });
+    }
+
+    // Upload image if provided via file upload
     if (req.file) {
       const result = await uploadImage(req.file.buffer);
       coverImageUrl = result.secure_url;
     }
 
+    // Validate cover image
     if (!coverImageUrl) {
       return res.status(400).json({ message: "Cover image URL is required" });
     }
@@ -20,10 +32,13 @@ const postABook = async (req, res) => {
     const book = new Book({
       title,
       author,
-      genre,
-      publicationDate,
+      category,
+      publicationDate: publicationDate || undefined,
       price: Number(price),
-      coverImage: { url: coverImageUrl },
+      coverImage: { 
+        url: coverImageUrl, 
+        public_id: coverImage?.public_id || coverImageUrl.split('/').pop().split('.')[0] 
+      },
       description,
       trending: trending === "true" || trending === true,
       oldPrice: oldPrice ? Number(oldPrice) : undefined,
@@ -33,6 +48,9 @@ const postABook = async (req, res) => {
     res.status(201).json({ message: "Book created successfully", book });
   } catch (error) {
     console.error("Error creating book:", error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: "Validation failed", errors: error.errors });
+    }
     res.status(500).json({ message: "Failed to create book", error: error.message });
   }
 };
@@ -64,7 +82,7 @@ const getSingleBook = async (req, res) => {
 const UpdateBook = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, author, genre, publicationDate, price, description, trending, oldPrice } = req.body;
+    const { title, author, category, publicationDate, price, description, trending, oldPrice } = req.body;
     let coverImageUrl = req.body.coverImage?.url;
 
     // Upload image if provided
@@ -81,7 +99,7 @@ const UpdateBook = async (req, res) => {
     const updateData = {
       title,
       author,
-      genre,
+      category,
       publicationDate: publicationDate || undefined,
       price: Number(price),
       coverImage: coverImageUrl ? { url: coverImageUrl } : undefined,
