@@ -14,11 +14,12 @@ ChartJS.register(ArcElement, Tooltip, Legend, Title);
 const StudyTypeChart = () => {
   const { data: books = [], isLoading } = useFetchAllBooksQuery();
 
-  const genres = ["Islam", "Philosophy", "Novels", "Science", "Self Help"];
-  const genreCounts = genres.map(
-    (genre) =>
+  // Note: Changed "Self Help" to "Self-Help" to match your backend validation
+  const categories = ["Islam", "Philosophy", "Novels", "Science", "Self-Help"];
+  const categoryCounts = categories.map(
+    (category) =>
       books.filter(
-        (book) => book.genre.toLowerCase() === genre.toLowerCase()
+        (book) => book.category && book.category.toLowerCase() === category.toLowerCase()
       ).length
   );
 
@@ -27,11 +28,11 @@ const StudyTypeChart = () => {
   }
 
   const data = {
-    labels: genres,
+    labels: categories,
     datasets: [
       {
-        label: "Books by Genre",
-        data: genreCounts,
+        label: "Books by Category",
+        data: categoryCounts,
         backgroundColor: [
           "rgba(255, 99, 132, 0.7)",
           "rgba(54, 162, 235, 0.7)",
@@ -59,7 +60,7 @@ const StudyTypeChart = () => {
       },
       title: {
         display: true,
-        text: "Books by Genre",
+        text: "Books by Category",
       },
       tooltip: {
         callbacks: {
