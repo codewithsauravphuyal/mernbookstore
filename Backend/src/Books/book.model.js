@@ -24,10 +24,55 @@ const bookSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ["Islam", "Philosophy", "Novels", "Science", "Self-Help"],
+      enum: [
+        // Fiction
+        "General Fiction",
+        "Historical Fiction",
+        "Mystery & Thriller",
+        "Science Fiction",
+        "Fantasy",
+        "Romance",
+        "Horror",
+        "Nepali Folk Tales",
+        "Nepali Historical Fiction",
+        // Non-Fiction
+        "Biography & Memoir",
+        "Self-Help",
+        "History",
+        "Business",
+        "Health & Wellness",
+        "Science & Technology",
+        "Religion & Spirituality",
+        "Nepali Culture & Heritage",
+        "Mountaineering & Adventure",
+        // Children & Young Adult
+        "Children’s Books",
+        "Young Adult (YA)",
+        "Educational",
+        "Nepali Children’s Stories",
+        // Special Interest
+        "Classics",
+        "Poetry",
+        "Graphic Novels",
+        "Cookbooks",
+        "Art & Photography",
+        "Nepali Literature",
+        "Travel & Tourism",
+        // Religion
+        "Hinduism",
+        "Buddhism",
+        "Islam",
+        "Christianity",
+        "Other Religions",
+        "Nepali Spiritual Traditions",
+        // Academic
+        "Textbooks",
+        "Reference Books",
+        "Research & Essays",
+      ],
     },
     publicationDate: {
-      type: Date,
+      type: Number, // Changed to Number to store year only
     },
     description: {
       type: String,

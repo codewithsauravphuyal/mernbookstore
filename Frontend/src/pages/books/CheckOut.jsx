@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -11,11 +11,37 @@ import Swal from "sweetalert2";
 const CheckOut = () => {
   const [isChecked, setIsChecked] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [paymentError, setPaymentError] = useState(null);
+  const [khaltiLoaded, setKhaltiLoaded] = useState(false);
   const cartItems = useSelector((state) => state.cart.cartItem);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [createOrder, { isLoading: isOrderLoading, error: orderError }] = useCreateOrderMutation();
+  const [verifyKhaltiPayment, { isLoading: isPaymentLoading }] = useVerifyKhaltiPaymentMutation();
+  const { currentUser } = useAuth();
 
-  // Debug log to inspect cart items
-  console.log('Checkout Cart Items:', cartItems);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
+  // Check if Khalti script is loaded
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.KhaltiCheckout) {
+      setKhaltiLoaded(true);
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://khalti.s3.ap-south-1.amazonaws.com/KhaltiCheckout.min.js';
+      script.async = true;
+      script.onload = () => setKhaltiLoaded(true);
+      script.onerror = () => {
+        console.error('Failed to load Khalti script');
+        setPaymentError('Payment service unavailable. Please try Cash on Delivery.');
+      };
+      document.body.appendChild(script);
+    }
+  }, []);
 
   // Calculate total price with fallback
   const totalPrice = cartItems
@@ -25,47 +51,46 @@ const CheckOut = () => {
     }, 0)
     .toFixed(2);
 
-  const navigate = useNavigate();
-  const [createOrder, { isLoading: isOrderLoading, error: orderError }] = useCreateOrderMutation();
-  const [verifyKhaltiPayment, { isLoading: isPaymentLoading }] = useVerifyKhaltiPaymentMutation();
-  const { currentUser } = useAuth();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
-
   const initiateKhaltiPayment = async (orderId) => {
+    if (!khaltiLoaded) {
+      throw new Error('Payment service is still loading. Please try again.');
+    }
+
     return new Promise((resolve, reject) => {
-      // eslint-disable-next-line no-undef
-      KhaltiCheckout.show({
-        publicKey: process.env.REACT_APP_KHALTI_PUBLIC_KEY,
-        productIdentity: orderId,
-        productName: "BookHauls Order",
-        productUrl: window.location.href,
-        amount: totalPrice * 100, // Khalti expects amount in paisa
-        eventHandler: {
-          onSuccess: async (payload) => {
-            try {
-              const response = await verifyKhaltiPayment({
-                token: payload.token,
-                amount: totalPrice * 100,
-                orderId,
-              }).unwrap();
-              dispatch(clearCart());
-              resolve(response);
-            } catch (error) {
+      try {
+        const checkout = new window.KhaltiCheckout({
+          publicKey: import.meta.env.VITE_KHALTI_PUBLIC_KEY,
+          productIdentity: orderId,
+          productName: "BookHauls Order",
+          productUrl: window.location.href,
+          amount: totalPrice * 100, // Khalti expects amount in paisa
+          eventHandler: {
+            onSuccess: async (payload) => {
+              try {
+                const response = await verifyKhaltiPayment({
+                  token: payload.token,
+                  amount: totalPrice * 100,
+                  orderId,
+                }).unwrap();
+                dispatch(clearCart());
+                resolve(response);
+              } catch (error) {
+                reject(error);
+              }
+            },
+            onError: (error) => {
               reject(error);
-            }
+            },
+            onClose: () => {
+              reject(new Error("Payment cancelled by user"));
+            },
           },
-          onError: (error) => {
-            reject(error);
-          },
-          onClose: () => {
-            reject(new Error("Payment cancelled by user"));
-          },
-        },
-      });
+        });
+
+        checkout.show();
+      } catch (error) {
+        reject(error);
+      }
     });
   };
 
@@ -82,6 +107,9 @@ const CheckOut = () => {
       });
       return;
     }
+
+    // Clear previous errors
+    setPaymentError(null);
 
     const newOrder = {
       name: data.name,
@@ -100,6 +128,7 @@ const CheckOut = () => {
 
     try {
       const orderResponse = await createOrder(newOrder).unwrap();
+      
       if (paymentMethod === "COD") {
         dispatch(clearCart());
         Swal.fire({
@@ -112,16 +141,31 @@ const CheckOut = () => {
         });
         navigate("/orders");
       } else if (paymentMethod === "Khalti") {
-        await initiateKhaltiPayment(orderResponse._id);
-        Swal.fire({
-          position: "center",
-          icon: "success",
-          title: "Payment Successful!",
-          text: "Your order has been confirmed. You'll be redirected to your orders.",
-          showConfirmButton: false,
-          timer: 1500,
-        });
-        navigate("/orders");
+        try {
+          await initiateKhaltiPayment(orderResponse._id);
+          Swal.fire({
+            position: "center",
+            icon: "success",
+            title: "Payment Successful!",
+            text: "Your order has been confirmed. You'll be redirected to your orders.",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+          navigate("/orders");
+        } catch (error) {
+          console.error("Khalti payment error:", error);
+          setPaymentError(error.message || "Payment failed. Please try again or use Cash on Delivery.");
+          
+          // Show error to user but don't block the UI
+          Swal.fire({
+            position: "center",
+            icon: "error",
+            title: "Payment Issue",
+            text: error.message || "Could not complete payment. You can try again or contact support.",
+            showConfirmButton: true,
+            confirmButtonColor: "#4F46E5",
+          });
+        }
       }
     } catch (error) {
       console.error("Failed to place order:", error);
@@ -175,6 +219,25 @@ const CheckOut = () => {
           Total: Rs {totalPrice} | Items: {cartItems.length}
         </motion.p>
 
+        {paymentError && (
+          <motion.div 
+            className="bg-red-50 text-red-600 p-4 rounded-lg mb-6 flex justify-between items-center"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <span>{paymentError}</span>
+            <button 
+              onClick={() => {
+                setPaymentMethod("COD");
+                setPaymentError(null);
+              }}
+              className="text-blue-600 underline text-sm"
+            >
+              Switch to COD
+            </button>
+          </motion.div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <motion.div
             className="space-y-6"
@@ -225,11 +288,17 @@ const CheckOut = () => {
                 Phone Number
               </label>
               <input
-                {...register("phone", { required: "Phone number is required" })}
+                {...register("phone", { 
+                  required: "Phone number is required",
+                  pattern: {
+                    value: /^[0-9]{10}$/,
+                    message: "Please enter a valid 10-digit phone number"
+                  }
+                })}
                 type="tel"
                 id="phone"
                 className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300"
-                placeholder="+123 456 7890"
+                placeholder="98XXXXXXXX"
               />
               {errors.phone && (
                 <motion.p
@@ -276,6 +345,7 @@ const CheckOut = () => {
                 id="country"
                 className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300"
                 placeholder="Nepal"
+                defaultValue="Nepal"
               />
               {errors.country && (
                 <motion.p
@@ -317,7 +387,13 @@ const CheckOut = () => {
                 Zipcode
               </label>
               <input
-                {...register("zipcode", { required: "Zipcode is required" })}
+                {...register("zipcode", { 
+                  required: "Zipcode is required",
+                  pattern: {
+                    value: /^[0-9]{5}$/,
+                    message: "Please enter a valid 5-digit zipcode"
+                  }
+                })}
                 type="text"
                 id="zipcode"
                 className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300"
@@ -339,7 +415,7 @@ const CheckOut = () => {
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Payment Method
               </label>
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
                 <label className="flex items-center space-x-2">
                   <input
                     type="radio"
@@ -357,26 +433,30 @@ const CheckOut = () => {
                     checked={paymentMethod === "Khalti"}
                     onChange={() => setPaymentMethod("Khalti")}
                     className="form-radio h-5 w-5 text-indigo-600"
+                    disabled={!khaltiLoaded}
                   />
-                  <span className="text-gray-700">Khalti</span>
+                  <span className={`${!khaltiLoaded ? 'text-gray-400' : 'text-gray-700'}`}>
+                    Khalti {!khaltiLoaded && '(Loading...)'}
+                  </span>
                 </label>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-start space-x-2">
               <input
                 type="checkbox"
-                id="billing_same"
+                id="terms"
+                checked={isChecked}
                 onChange={(e) => setIsChecked(e.target.checked)}
-                className="form-checkbox h-5 w-5 text-indigo-600 rounded"
+                className="form-checkbox h-5 w-5 text-indigo-600 rounded mt-1"
               />
-              <label htmlFor="billing_same" className="text-sm text-gray-600">
+              <label htmlFor="terms" className="text-sm text-gray-600">
                 I agree to the{" "}
-                <Link className="text-indigo-600 hover:underline font-semibold">
+                <Link to="/terms" className="text-indigo-600 hover:underline font-semibold">
                   Terms & Conditions
                 </Link>{" "}
                 and{" "}
-                <Link className="text-indigo-600 hover:underline font-semibold">
+                <Link to="/shipping" className="text-indigo-600 hover:underline font-semibold">
                   Shipping Policy
                 </Link>
               </label>
@@ -391,18 +471,18 @@ const CheckOut = () => {
           >
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
-              <ul className="space-y-3">
+              <ul className="space-y-3 divide-y divide-gray-200">
                 {cartItems.map((item) => {
                   const price = Number(item.price || item.newPrice || 0);
                   return (
-                    <li key={item._id} className="flex justify-between text-gray-600">
+                    <li key={item._id} className="flex justify-between py-3 text-gray-600">
                       <span className="truncate max-w-[200px]">{item.title}</span>
                       <span>Rs {isNaN(price) ? 'N/A' : price.toFixed(2)}</span>
                     </li>
                   );
                 })}
               </ul>
-              <div className="flex justify-between mt-6 text-lg font-semibold text-gray-900">
+              <div className="flex justify-between mt-6 pt-4 border-t border-gray-300 text-lg font-semibold text-gray-900">
                 <span>Total</span>
                 <span>Rs {totalPrice}</span>
               </div>
@@ -412,7 +492,7 @@ const CheckOut = () => {
             </div>
 
             <motion.div
-              className="mt-6 text-right"
+              className="mt-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
@@ -420,13 +500,23 @@ const CheckOut = () => {
               <motion.button
                 disabled={!isChecked || isOrderLoading || isPaymentLoading}
                 type="submit"
-                className={`w-full sm:w-auto py-3 px-8 rounded-full font-semibold text-white transition-all duration-300 shadow-lg ${
+                className={`w-full py-3 px-8 rounded-full font-semibold text-white transition-all duration-300 shadow-lg ${
                   isChecked ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-400 cursor-not-allowed"
                 }`}
-                whileHover={isChecked ? { scale: 1.05, boxShadow: "0 4px 15px rgba(0,0,0,0.2)" } : {}}
-                whileTap={isChecked ? { scale: 0.95 } : {}}
+                whileHover={isChecked ? { scale: 1.02, boxShadow: "0 4px 15px rgba(0,0,0,0.1)" } : {}}
+                whileTap={isChecked ? { scale: 0.98 } : {}}
               >
-                Place Order
+                {isOrderLoading || isPaymentLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  `Place Order (Rs ${totalPrice})`
+                )}
               </motion.button>
             </motion.div>
           </motion.div>

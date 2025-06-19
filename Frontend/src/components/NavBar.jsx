@@ -39,7 +39,8 @@ const NavBar = () => {
   };
 
   const filteredBooks = allBooks?.filter((book) =>
-    book.title.toLowerCase().includes(searchTerm.toLowerCase())
+    book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    book.author.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleBookClick = (bookId) => {
@@ -231,20 +232,20 @@ const NavBar = () => {
       {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
+          <>
             <motion.div
-              className="absolute top-0 left-0 h-full w-4/5 max-w-sm bg-white shadow-xl"
+              className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <motion.div
+              className="fixed top-0 left-0 h-full w-4/5 max-w-sm bg-white shadow-xl z-50 md:hidden"
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between p-4 border-b border-gray-200">
@@ -342,17 +343,16 @@ const NavBar = () => {
                 </div>
 
                 <div className="mt-auto p-4 border-t border-gray-200">
-                  <NavLink
+                  <NavLink 
                     to="/cart"
                     className="flex items-center justify-between p-3 rounded-lg bg-indigo-50 text-indigo-700"
-                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <div className="flex items-center">
                       <FaShoppingCart className="mr-2" />
                       <span>Shopping Cart</span>
                     </div>
                     {cartItems.length > 0 && (
-                      <span className="bg-indigo-600 text-white text-xs font-bold h-5 w-5 flex items-center justify-center rounded-full">
+                      <span className="bg-indigo-600 text-white text-xs font-bold h-5 w-6 flex items-center justify-center rounded-full">
                         {cartItems.length}
                       </span>
                     )}
@@ -360,7 +360,7 @@ const NavBar = () => {
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
     </header>

@@ -67,8 +67,8 @@ const AddBook = () => {
       const newBookData = {
         title: data.title,
         author: data.author || 'Unknown Author',
-        category: data.category, // Changed from genre to category
-        publicationDate: data.publicationDate || new Date(),
+        category: data.category,
+        publicationDate: data.publicationDate ? Number(data.publicationDate) : undefined, // Convert to Number
         price: Number(data.newPrice),
         coverImage,
         trending: data.trending === 'on',
@@ -103,6 +103,54 @@ const AddBook = () => {
       setUploading(false);
     }
   };
+
+  const categoryOptions = [
+    { value: '', label: 'Choose A Category', disabled: true },
+    // Fiction
+    { value: 'General Fiction', label: 'General Fiction' },
+    { value: 'Historical Fiction', label: 'Historical Fiction' },
+    { value: 'Mystery & Thriller', label: 'Mystery & Thriller' },
+    { value: 'Science Fiction', label: 'Science Fiction' },
+    { value: 'Fantasy', label: 'Fantasy' },
+    { value: 'Romance', label: 'Romance' },
+    { value: 'Horror', label: 'Horror' },
+    { value: 'Nepali Folk Tales', label: 'Nepali Folk Tales' },
+    { value: 'Nepali Historical Fiction', label: 'Nepali Historical Fiction' },
+    // Non-Fiction
+    { value: 'Biography & Memoir', label: 'Biography & Memoir' },
+    { value: 'Self-Help', label: 'Self-Help' },
+    { value: 'History', label: 'History' },
+    { value: 'Business', label: 'Business' },
+    { value: 'Health & Wellness', label: 'Health & Wellness' },
+    { value: 'Science & Technology', label: 'Science & Technology' },
+    { value: 'Religion & Spirituality', label: 'Religion & Spirituality' },
+    { value: 'Nepali Culture & Heritage', label: 'Nepali Culture & Heritage' },
+    { value: 'Mountaineering & Adventure', label: 'Mountaineering & Adventure' },
+    // Children & Young Adult
+    { value: 'Children’s Books', label: 'Children’s Books' },
+    { value: 'Young Adult (YA)', label: 'Young Adult (YA)' },
+    { value: 'Educational', label: 'Educational' },
+    { value: 'Nepali Children’s Stories', label: 'Nepali Children’s Stories' },
+    // Special Interest
+    { value: 'Classics', label: 'Classics' },
+    { value: 'Poetry', label: 'Poetry' },
+    { value: 'Graphic Novels', label: 'Graphic Novels' },
+    { value: 'Cookbooks', label: 'Cookbooks' },
+    { value: 'Art & Photography', label: 'Art & Photography' },
+    { value: 'Nepali Literature', label: 'Nepali Literature' },
+    { value: 'Travel & Tourism', label: 'Travel & Tourism' },
+    // Religion
+    { value: 'Hinduism', label: 'Hinduism' },
+    { value: 'Buddhism', label: 'Buddhism' },
+    { value: 'Islam', label: 'Islam' },
+    { value: 'Christianity', label: 'Christianity' },
+    { value: 'Other Religions', label: 'Other Religions' },
+    { value: 'Nepali Spiritual Traditions', label: 'Nepali Spiritual Traditions' },
+    // Academic
+    { value: 'Textbooks', label: 'Textbooks' },
+    { value: 'Reference Books', label: 'Reference Books' },
+    { value: 'Research & Essays', label: 'Research & Essays' },
+  ];
 
   return (
     <div className="relative bg-gray-50 overflow-hidden">
@@ -140,12 +188,18 @@ const AddBook = () => {
               validation={{ required: 'Author is required' }}
             />
             <InputField
-              label="Publication Date"
+              label="Publication Year"
               name="publicationDate"
-              type="date"
-              placeholder="Select publication date"
+              type="number"
+              placeholder="Enter publication year (e.g., 2025)"
               register={register}
               error={errors.publicationDate}
+              validation={{
+                pattern: {
+                  value: /^\d{4}$/,
+                  message: 'Enter a valid 4-digit year',
+                },
+              }}
             />
             <InputField
               label="Description"
@@ -158,19 +212,12 @@ const AddBook = () => {
             <SelectField
               label="Category"
               name="category"
-              options={[
-                { value: '', label: 'Choose A Category', disabled: true }, // Disable the placeholder option
-                { value: 'Islam', label: 'Islam' },
-                { value: 'Philosophy', label: 'Philosophy' },
-                { value: 'Novels', label: 'Novels' },
-                { value: 'Science', label: 'Science' },
-                { value: 'Self-Help', label: 'Self Help' },
-              ]}
+              options={categoryOptions}
               register={register}
               error={errors.category}
               validation={{
                 required: 'Category is required',
-                validate: (value) => value !== '' || 'Please select a valid category', // Prevent empty string
+                validate: (value) => value !== '' || 'Please select a valid category',
               }}
             />
             <motion.div

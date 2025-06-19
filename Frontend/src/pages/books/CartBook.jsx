@@ -123,7 +123,7 @@ const CartBook = () => {
                       <p className="text-sm text-gray-600 mt-2">
                         <strong>Category:</strong> <span className="capitalize bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">{product.category}</span>
                       </p>
-                      {orderDetails && (
+                      {/* {orderDetails && (
                         <div className="text-sm text-gray-600 mt-2 space-y-1">
                           <p>
                             <strong>Payment Method:</strong> <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">{orderDetails.paymentMethod}</span>
@@ -135,7 +135,7 @@ const CartBook = () => {
                             <strong>Order Status:</strong> <span className={`px-2 py-1 rounded-full ${orderDetails.orderStatus === 'Delivered' ? 'bg-green-100 text-green-700' : orderDetails.orderStatus === 'Cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{orderDetails.orderStatus}</span>
                           </p>
                         </div>
-                      )}
+                      )} */}
                       <div className="flex items-center justify-between mt-4">
                         <p className="text-gray-600">
                           <strong>Qty:</strong> 1

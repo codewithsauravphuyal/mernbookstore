@@ -13,7 +13,52 @@ const postABook = async (req, res) => {
     }
 
     // Validate category against allowed values
-    const validCategories = ["Islam", "Philosophy", "Novels", "Science", "Self-Help"];
+    const validCategories = [
+      // Fiction
+      "General Fiction",
+      "Historical Fiction",
+      "Mystery & Thriller",
+      "Science Fiction",
+      "Fantasy",
+      "Romance",
+      "Horror",
+      "Nepali Folk Tales",
+      "Nepali Historical Fiction",
+      // Non-Fiction
+      "Biography & Memoir",
+      "Self-Help",
+      "History",
+      "Business",
+      "Health & Wellness",
+      "Science & Technology",
+      "Religion & Spirituality",
+      "Nepali Culture & Heritage",
+      "Mountaineering & Adventure",
+      // Children & Young Adult
+      "Children’s Books",
+      "Young Adult (YA)",
+      "Educational",
+      "Nepali Children’s Stories",
+      // Special Interest
+      "Classics",
+      "Poetry",
+      "Graphic Novels",
+      "Cookbooks",
+      "Art & Photography",
+      "Nepali Literature",
+      "Travel & Tourism",
+      // Religion
+      "Hinduism",
+      "Buddhism",
+      "Islam",
+      "Christianity",
+      "Other Religions",
+      "Nepali Spiritual Traditions",
+      // Academic
+      "Textbooks",
+      "Reference Books",
+      "Research & Essays",
+    ];
     if (!validCategories.includes(category)) {
       return res.status(400).json({ message: `Category must be one of: ${validCategories.join(", ")}` });
     }
@@ -33,7 +78,7 @@ const postABook = async (req, res) => {
       title,
       author,
       category,
-      publicationDate: publicationDate || undefined,
+      publicationDate: publicationDate ? Number(publicationDate) : undefined, // Convert to Number
       price: Number(price),
       coverImage: { 
         url: coverImageUrl, 
@@ -87,7 +132,6 @@ const UpdateBook = async (req, res) => {
 
     // Upload image if provided
     if (req.file && req.file.buffer) {
-      console.log('Uploading file buffer:', req.file.buffer); // Debug log
       const result = await uploadImage(req.file.buffer);
       coverImageUrl = result.secure_url;
     }
@@ -100,7 +144,7 @@ const UpdateBook = async (req, res) => {
       title,
       author,
       category,
-      publicationDate: publicationDate || undefined,
+      publicationDate: publicationDate ? Number(publicationDate) : undefined, // Convert to Number
       price: Number(price),
       coverImage: coverImageUrl ? { url: coverImageUrl } : undefined,
       description,

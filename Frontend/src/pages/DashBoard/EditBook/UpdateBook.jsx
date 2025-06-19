@@ -10,7 +10,7 @@ import {
 import getBaseUrl from "../../../utils/getBaseUrl";
 import Loading from "../../../components/Loading";
 import InputField from "../AddBook/InputField";
-import SelectField from "../AddBook/SelectField"; // Import SelectField
+import SelectField from "../AddBook/SelectField";
 
 const UpdateBook = () => {
   const { id } = useParams();
@@ -29,8 +29,8 @@ const UpdateBook = () => {
     if (bookData) {
       setValue("title", bookData.title);
       setValue("author", bookData.author);
-      setValue("category", bookData.category); // Changed from genre to category
-      setValue("publicationDate", bookData.publicationDate?.split("T")[0] || "");
+      setValue("category", bookData.category);
+      setValue("publicationYear", bookData.publicationYear || "");
       setValue("price", bookData.price);
       setValue("description", bookData.description);
       setValue("trending", bookData.trending);
@@ -77,8 +77,8 @@ const UpdateBook = () => {
     const updateBookData = {
       title: data.title,
       author: data.author,
-      category: data.category, // Changed from genre to category
-      publicationDate: data.publicationDate || undefined,
+      category: data.category,
+      publicationDate: data.publicationYear ? Number(data.publicationYear) : undefined,
       price: Number(data.price),
       coverImage: { url: coverImageUrl },
       description: data.description,
@@ -109,12 +109,60 @@ const UpdateBook = () => {
     setCoverImageFile(e.target.files[0]);
   };
 
+  const categoryOptions = [
+    { value: '', label: 'Choose A Category', disabled: true },
+    // Fiction
+    { value: 'General Fiction', label: 'General Fiction' },
+    { value: 'Historical Fiction', label: 'Historical Fiction' },
+    { value: 'Mystery & Thriller', label: 'Mystery & Thriller' },
+    { value: 'Science Fiction', label: 'Science Fiction' },
+    { value: 'Fantasy', label: 'Fantasy' },
+    { value: 'Romance', label: 'Romance' },
+    { value: 'Horror', label: 'Horror' },
+    { value: 'Nepali Folk Tales', label: 'Nepali Folk Tales' },
+    { value: 'Nepali Historical Fiction', label: 'Nepali Historical Fiction' },
+    // Non-Fiction
+    { value: 'Biography & Memoir', label: 'Biography & Memoir' },
+    { value: 'Self-Help', label: 'Self-Help' },
+    { value: 'History', label: 'History' },
+    { value: 'Business', label: 'Business' },
+    { value: 'Health & Wellness', label: 'Health & Wellness' },
+    { value: 'Science & Technology', label: 'Science & Technology' },
+    { value: 'Religion & Spirituality', label: 'Religion & Spirituality' },
+    { value: 'Nepali Culture & Heritage', label: 'Nepali Culture & Heritage' },
+    { value: 'Mountaineering & Adventure', label: 'Mountaineering & Adventure' },
+    // Children & Young Adult
+    { value: 'Children’s Books', label: 'Children’s Books' },
+    { value: 'Young Adult (YA)', label: 'Young Adult (YA)' },
+    { value: 'Educational', label: 'Educational' },
+    { value: 'Nepali Children’s Stories', label: 'Nepali Children’s Stories' },
+    // Special Interest
+    { value: 'Classics', label: 'Classics' },
+    { value: 'Poetry', label: 'Poetry' },
+    { value: 'Graphic Novels', label: 'Graphic Novels' },
+    { value: 'Cookbooks', label: 'Cookbooks' },
+    { value: 'Art & Photography', label: 'Art & Photography' },
+    { value: 'Nepali Literature', label: 'Nepali Literature' },
+    { value: 'Travel & Tourism', label: 'Travel & Tourism' },
+    // Religion
+    { value: 'Hinduism', label: 'Hinduism' },
+    { value: 'Buddhism', label: 'Buddhism' },
+    { value: 'Islam', label: 'Islam' },
+    { value: 'Christianity', label: 'Christianity' },
+    { value: 'Other Religions', label: 'Other Religions' },
+    { value: 'Nepali Spiritual Traditions', label: 'Nepali Spiritual Traditions' },
+    // Academic
+    { value: 'Textbooks', label: 'Textbooks' },
+    { value: 'Reference Books', label: 'Reference Books' },
+    { value: 'Research & Essays', label: 'Research & Essays' },
+  ];
+
   if (isLoading) return <Loading />;
   if (isError) return <div className="text-center text-red-600 text-lg font-medium">Error fetching book data</div>;
 
   return (
     <div className="relative bg-gray-50">
-      <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-12">
+      <div className="max-w-full mx-auto px-8 sm:px-8 lg:px-12">
         <div className="relative bg-white rounded-2xl shadow-xl p-10 md:p-12">
           <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 mb-10 text-center">
             <span className="text-indigo-600">Update</span> Book Details
@@ -131,7 +179,7 @@ const UpdateBook = () => {
             />
 
             <InputField
-              label="Author"
+              label="Authors"
               name="author"
               placeholder="Enter author name"
               register={register}
@@ -142,14 +190,7 @@ const UpdateBook = () => {
             <SelectField
               label="Category"
               name="category"
-              options={[
-                { value: "", label: "Choose A Category", disabled: true },
-                { value: "Islam", label: "Islam" },
-                { value: "Philosophy", label: "Philosophy" },
-                { value: "Novels", label: "Novels" },
-                { value: "Science", label: "Science" },
-                { value: "Self-Help", label: "Self Help" },
-              ]}
+              options={categoryOptions}
               register={register}
               error={errors.category}
               rules={{
@@ -159,11 +200,18 @@ const UpdateBook = () => {
             />
 
             <InputField
-              label="Publication Date"
-              name="publicationDate"
-              type="date"
+              label="Publication Year"
+              name="publicationYear"
+              type="number"
+              placeholder="Enter publication year (e.g., 2025)"
               register={register}
-              error={errors.publicationDate}
+              error={errors.publicationYear}
+              rules={{
+                pattern: {
+                  value: /^\d{4}$/,
+                  message: "Enter a valid 4-digit year",
+                },
+              }}
             />
 
             <InputField
@@ -181,7 +229,7 @@ const UpdateBook = () => {
                 {...register("trending")}
                 className="w-6 h-6 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
               />
-              <label className="text-base font-medium text-gray-700">Mark as Trending</label>
+              <label className="text-base font-medium text-gray-700">Mark as trending</label>
             </div>
 
             <InputField
@@ -191,7 +239,7 @@ const UpdateBook = () => {
               placeholder="Old Price"
               register={register}
               error={errors.oldPrice}
-              rules={{ min: { value: 0, message: "Price cannot be negative" } }}
+              rules={{ min: { value: 0, message: "Price cannot be negative" }}}
             />
 
             <InputField
@@ -201,7 +249,13 @@ const UpdateBook = () => {
               placeholder="Enter price"
               register={register}
               error={errors.price}
-              rules={{ required: "Price is required", min: { value: 0, message: "Price cannot be negative" } }}
+              rules={{ 
+                required: "Price is required", 
+                min: { 
+                  value: 0, 
+                  message: "Price cannot be negative" 
+                }
+              }}
             />
 
             <div>
@@ -211,7 +265,7 @@ const UpdateBook = () => {
                 accept="image/*"
                 onChange={handleFileChange}
                 disabled={uploading}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"
               />
               <InputField
                 label="Or Enter Cover Image URL"

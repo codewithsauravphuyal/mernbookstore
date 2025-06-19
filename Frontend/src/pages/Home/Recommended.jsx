@@ -1,16 +1,65 @@
-import React from "react";
+import React, { useMemo } from "react";
 import BookCard from "../books/BookCard";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { motion } from "framer-motion";
 import { Autoplay, Navigation } from "swiper/modules";
 import { useFetchAllBooksQuery } from "../../redux/features/Books/BookApi";
-import { NavLink } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/navigation";
 
+// Utility function to shuffle array for random selection
+const shuffleArray = (array) => {
+  return array.sort(() => Math.random() - 0.5);
+};
+
 const Recommended = () => {
   const { data: books = [], isLoading, isError } = useFetchAllBooksQuery();
-  const recommendedBooks = books.slice(0, 8); // Get first 8 books as recommended
+
+  // Get unique categories from available books
+  const categories = useMemo(() => {
+    const uniqueCategories = [
+      ...new Set(
+        books
+          .filter((book) => book.category)
+          .map((book) => book.category)
+      ),
+    ];
+    return uniqueCategories.sort();
+  }, [books]);
+
+  // Generate recommended books
+  const recommendedBooks = useMemo(() => {
+    // Prioritize trending books
+    let trendingBooks = books.filter((book) => book.trending);
+    trendingBooks = shuffleArray([...trendingBooks]); // Shuffle to avoid same order
+
+    // If fewer than 8 trending books, supplement with random books from different categories
+    if (trendingBooks.length < 8 && categories.length > 0) {
+      const remainingSlots = 8 - trendingBooks.length;
+      const nonTrendingBooks = books.filter((book) => !book.trending);
+      const selectedBooks = [];
+
+      // Try to pick one book from each category for variety
+      for (const category of shuffleArray([...categories])) {
+        const booksInCategory = nonTrendingBooks.filter(
+          (book) => book.category === category
+        );
+        if (booksInCategory.length > 0 && selectedBooks.length < remainingSlots) {
+          const randomBook =
+            booksInCategory[Math.floor(Math.random() * booksInCategory.length)];
+          if (!selectedBooks.some((b) => b._id === randomBook._id)) {
+            selectedBooks.push(randomBook);
+          }
+        }
+      }
+
+      // Combine trending and selected non-trending books
+      return [...trendingBooks, ...selectedBooks].slice(0, 8);
+    }
+
+    // If enough trending books, return up to 8
+    return trendingBooks.slice(0, 8);
+  }, [books, categories]);
 
   if (isLoading) {
     return (
@@ -43,7 +92,7 @@ const Recommended = () => {
             Recommended For You
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Curated selections based on your reading preferences
+            Explore our handpicked selections featuring trending reads and diverse genres
           </p>
         </motion.div>
 
@@ -63,8 +112,8 @@ const Recommended = () => {
                 1024: { slidesPerView: 4, spaceBetween: 30 },
               }}
               navigation={{
-                nextEl: '.recommended-next',
-                prevEl: '.recommended-prev',
+                nextEl: ".recommended-next",
+                prevEl: ".recommended-prev",
               }}
               modules={[Autoplay, Navigation]}
               className="pb-12"
@@ -84,13 +133,33 @@ const Recommended = () => {
 
             {/* Custom Navigation Arrows */}
             <button className="recommended-prev hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:bg-indigo-100 absolute left-0 top-1/2 transform -translate-y-1/2 z-10 cursor-pointer border border-gray-200">
-              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="w-6 h-6 text-gray-700"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
             <button className="recommended-next hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:bg-indigo-100 absolute right-0 top-1/2 transform -translate-y-1/2 z-10 cursor-pointer border border-gray-200">
-              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="w-6 h-6 text-gray-700"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>
