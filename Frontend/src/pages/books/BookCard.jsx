@@ -1,8 +1,8 @@
-import React from "react";
 import { FiShoppingCart } from "react-icons/fi";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../../redux/features/cart/cartSlice";
 import { Link } from "react-router-dom";
+import PropTypes from 'prop-types';
 
 const BookCard = ({ book }) => {
   const dispatch = useDispatch();
@@ -58,6 +58,17 @@ const BookCard = ({ book }) => {
       </div>
     </div>
   );
+};
+
+BookCard.propTypes = {
+  book: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    coverImage: PropTypes.object,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string,
+    price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    oldPrice: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }).isRequired,
 };
 
 export default BookCard;

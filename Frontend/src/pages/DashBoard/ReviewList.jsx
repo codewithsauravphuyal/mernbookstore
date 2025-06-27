@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import getBaseUrl from '../../utils/getBaseUrl';
 import { FiTrash, FiStar } from 'react-icons/fi';

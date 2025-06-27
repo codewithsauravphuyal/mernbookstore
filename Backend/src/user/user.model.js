@@ -19,12 +19,39 @@ const userSchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
+  // Additional profile fields
+  firstName: {
+    type: String,
+    trim: true
+  },
+  lastName: {
+    type: String,
+    trim: true
+  },
+  phone: {
+    type: String,
+    trim: true
+  },
+  shippingAddress: {
+    street: String,
+    city: String,
+    state: String,
+    country: {
+      type: String,
+      default: 'Nepal'
+    },
+    zipcode: String
+  },
   role: {
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
   },
   createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
     type: Date,
     default: Date.now
   }
@@ -34,6 +61,12 @@ const userSchema = new mongoose.Schema({
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+// Update the updatedAt field before saving
+userSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
   next();
 });
 

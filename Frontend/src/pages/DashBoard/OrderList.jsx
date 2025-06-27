@@ -1,8 +1,7 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import { useGetAllOrdersQuery, useUpdateOrderStatusMutation } from "../../redux/features/order/ordersApi";
 import { motion } from "framer-motion";
-import { FiAlertCircle, FiEye, FiRefreshCw } from "react-icons/fi";
+import { FiAlertCircle, FiEye } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { useAuth } from "../../context/AuthContext";
 

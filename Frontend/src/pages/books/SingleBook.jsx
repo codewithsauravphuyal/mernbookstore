@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FiShoppingCart, FiStar, FiChevronLeft, FiEdit, FiTrash } from "react-icons/fi";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useFetchbookbyIdQuery } from "../../redux/features/Books/BookApi";
 import { addToCart } from "../../redux/features/cart/cartSlice";
@@ -11,10 +11,11 @@ import axios from "axios";
 import getBaseUrl from "../../utils/getBaseUrl";
 import { FaRegComment, FaRegImages, FaCheckCircle } from "react-icons/fa";
 import Swal from "sweetalert2";
+import ProductChat from "../../components/ProductChat";
 
 const SingleBook = () => {
   const { id } = useParams();
-  const { data: book, isLoading, isError } = useFetchbookbyIdQuery(id);
+  const { data: book, isLoading, isError } = useFetchbookbyIdQuery(id, { skip: !id });
   const dispatch = useDispatch();
   const { currentUser } = useAuth();
   const [reviews, setReviews] = useState([]);
@@ -25,9 +26,30 @@ const SingleBook = () => {
   const [images, setImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingReview, setEditingReview] = useState(null);
+  const [showChat, setShowChat] = useState(false);
+  const navigate = useNavigate();
 
   const handleAddToCart = (product) => {
-    dispatch(addToCart(product));
+    if (product.quantity > 0) {
+      dispatch(addToCart(product));
+      Swal.fire({
+        position: 'center',
+        icon: 'success',
+        title: 'Added to Cart!',
+        text: `${product.title} has been added to your cart.`,
+        showConfirmButton: false,
+        timer: 1500
+      });
+    } else {
+      Swal.fire({
+        position: 'center',
+        icon: 'error',
+        title: 'Out of Stock',
+        text: 'This book is currently out of stock.',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    }
   };
 
   // Fetch reviews
@@ -264,6 +286,18 @@ const SingleBook = () => {
     }
   };
 
+  if (!id || isError || (!isLoading && !book)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+        <div className="bg-white p-8 rounded-xl shadow-md text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-2">Book Not Found</h2>
+          <p className="text-gray-600 mb-4">This book has been removed or does not exist.</p>
+          <Link to="/" className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">Go to Home</Link>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading)
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -368,8 +402,8 @@ const SingleBook = () => {
               <div className="flex items-center gap-2">
                 <div className="flex text-yellow-400">
                   {[...Array(5)].map((_, i) => (
-                    <FiStar 
-                      key={i} 
+                    <FiStar
+                      key={i}
                       className={`w-5 h-5 ${i < Math.round(book.averageRating) ? 'fill-current' : ''}`}
                     />
                   ))}
@@ -384,21 +418,49 @@ const SingleBook = () => {
               </p>
 
               <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold text-indigo-600">Rs {book.price}</span>
-                {book.oldPrice && (
-                  <span className="text-base text-gray-400 line-through">Rs {book.oldPrice}</span>
-                )}
+                <div>
+                  <span className="text-3xl font-bold text-indigo-600">Rs {book.price}</span>
+                  {book.oldPrice && (
+                    <span className="text-base text-gray-400 line-through ml-4">Rs {book.oldPrice}</span>
+                  )}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {book.quantity > 0 ? (
+                    <span className="text-green-600 font-medium">
+                      {book.quantity} in stock
+                    </span>
+                  ) : (
+                    <span className="text-red-600 font-medium">
+                      Out of stock
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <motion.button
-                onClick={() => handleAddToCart(book)}
-                className="w-full bg-indigo-600 text-white py-3 px-6 rounded-full font-semibold flex items-center justify-center gap-3 hover:bg-indigo-700 transition-all duration-300 shadow-lg"
-                whileHover={{ scale: 1.05, boxShadow: "0 6px 20px rgba(0,0,0,0.15)" }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FiShoppingCart className="text-xl" />
-                <span>Add to Cart</span>
-              </motion.button>
+              <motion.div className="flex items-center gap-4 mt-8">
+                {book.quantity > 0 ? (
+                  <button
+                    onClick={() => handleAddToCart(book)}
+                    className="flex-1 py-3 px-6 bg-indigo-600 text-white rounded-lg font-semibold text-lg shadow hover:bg-indigo-700 transition-colors"
+                  >
+                    Add to Cart
+                  </button>
+                ) : (
+                  <button
+                    className="flex-1 py-3 px-6 bg-gray-400 text-white rounded-lg font-semibold text-lg shadow cursor-not-allowed"
+                    disabled
+                  >
+                    Out of Stock
+                  </button>
+                )}
+                <button
+                  onClick={() => navigate(`/chat/${book._id}`)}
+                  className="flex items-center gap-2 py-3 px-6 bg-white border border-indigo-600 text-indigo-600 rounded-lg font-semibold text-lg shadow hover:bg-indigo-50 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8L3 20l.8-3.2A7.96 7.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                  Chat with Admin
+                </button>
+              </motion.div>
             </motion.div>
           </div>
         </div>
@@ -419,7 +481,7 @@ const SingleBook = () => {
       </motion.div>
 
       {/* Reviews Section */}
-      <motion.div 
+      <motion.div
         className="max-w-5xl mx-auto mt-16 bg-white rounded-3xl shadow-lg p-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -690,6 +752,9 @@ const SingleBook = () => {
           </div>
         )}
       </motion.div>
+      {showChat && book && (
+        <ProductChat product={book} />
+      )}
     </div>
   );
 };

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   HiViewGridAdd,
@@ -9,10 +8,15 @@ import {
   MdDashboard,
 } from 'react-icons/md';
 import { FaBook, FaUserCog, FaComment } from 'react-icons/fa';
+import { useState } from 'react';
+import { useGetChatsQuery } from '../../redux/features/chat/chatApi';
 
 const DashboardLayout = () => {
+  const [globalError, setGlobalError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { data: chatsData } = useGetChatsQuery();
+  const unreadCount = chatsData?.chats?.reduce((acc, chat) => acc + (chat.unreadCount || 0), 0) || 0;
 
   const isActive = (path) => location.pathname === path;
 
@@ -23,6 +27,13 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
+      {/* Global Error Banner */}
+      {globalError && (
+        <div className="fixed top-0 left-0 w-full z-50 bg-red-600 text-white text-center py-3 font-semibold shadow-lg">
+          {globalError}
+          <button onClick={() => setGlobalError(null)} className="ml-4 px-3 py-1 bg-red-800 rounded">Dismiss</button>
+        </div>
+      )}
       {/* Sidebar */}
       <div className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64 bg-indigo-800 text-white">
@@ -85,6 +96,20 @@ const DashboardLayout = () => {
               <FaComment className="mr-3 text-lg" />
               Reviews
             </Link>
+            <Link
+              to="/dashboard/chats"
+              className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
+                isActive('/dashboard/chats') ? 'bg-indigo-700' : 'hover:bg-indigo-700'
+              }`}
+            >
+              <FaComment className="mr-3 text-lg" />
+              Chats
+              {unreadCount > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                  {unreadCount}
+                </span>
+              )}
+            </Link>
           </nav>
 
           <div className="p-4">
@@ -122,7 +147,7 @@ const DashboardLayout = () => {
         </header>
 
         <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
-          <Outlet />
+          <Outlet context={{ setGlobalError }} />
         </main>
       </div>
     </div>

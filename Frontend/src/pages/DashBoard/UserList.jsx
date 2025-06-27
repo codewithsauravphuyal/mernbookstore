@@ -1,12 +1,11 @@
-import React from "react";
-import { useGetUsersQuery, useDeleteUserMutation, useToggleUserRoleMutation } from "../../redux/features/user/UserApi";
+import { useGetAllUsersQuery, useDeleteUserMutation, useToggleUserRoleMutation } from "../../redux/features/user/UserApi";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 import Loading from "../../components/Loading";
 
 const UserList = () => {
   const { currentUser } = useAuth();
-  const { data: users = [], isLoading, isError, error } = useGetUsersQuery();
+  const { data: users = [], isLoading, isError, error } = useGetAllUsersQuery();
   const [deleteUser] = useDeleteUserMutation();
   const [toggleUserRole] = useToggleUserRoleMutation();
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +13,7 @@ const Register = () => {
 
   const onSubmit = async (data) => {
     try {
-      const response = await axios.post(`${getBaseUrl()}/api/auth/register`, {
+      await axios.post(`${getBaseUrl()}/api/auth/register`, {
         email: data.email,
         password: data.password,
         userName: data.userName,

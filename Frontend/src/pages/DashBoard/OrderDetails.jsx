@@ -1,4 +1,3 @@
-import React from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import { useGetOrderByIdQuery, useUpdateOrderStatusMutation, useUpdatePaymentStatusMutation } from "../../redux/features/order/ordersApi";
 import { motion } from "framer-motion";

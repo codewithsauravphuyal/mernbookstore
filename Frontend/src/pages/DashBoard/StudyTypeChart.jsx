@@ -1,4 +1,3 @@
-import React from "react";
 import { Doughnut } from "react-chartjs-2";
 import { useFetchAllBooksQuery } from "../../redux/features/Books/BookApi";
 import {
@@ -47,10 +46,10 @@ const StudyTypeChart = () => {
     "Nepali Culture & Heritage": "Non-Fiction",
     "Mountaineering & Adventure": "Non-Fiction",
     // Children & Young Adult
-    "Children’s Books": "Children & Young Adult",
+    "Children's Books": "Children & Young Adult",
     "Young Adult (YA)": "Children & Young Adult",
     "Educational": "Children & Young Adult",
-    "Nepali Children’s Stories": "Children & Young Adult",
+    "Nepali Children's Stories": "Children & Young Adult",
     // Special Interest
     "Classics": "Special Interest",
     "Poetry": "Special Interest",

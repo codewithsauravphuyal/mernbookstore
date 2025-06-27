@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { CiSearch, CiMenuBurger, CiCircleRemove } from "react-icons/ci";
 import { FaShoppingCart, FaBookOpen } from "react-icons/fa";
@@ -11,8 +11,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import avatar from "../assets/avatar.png";
 
 const navigation = [
+  { name: "My Profile", href: "/profile", icon: <RiAccountCircleLine className="mr-2" /> },
   { name: "My Orders", href: "/orders", icon: <RiHistoryLine className="mr-2" /> },
-  { name: "Account", href: "/account", icon: <RiAccountCircleLine className="mr-2" /> },
 ];
 
 const NavBar = () => {

@@ -4,7 +4,7 @@ const { uploadImage } = require("../utils/cloudinary");
 // Post a new book
 const postABook = async (req, res) => {
   try {
-    const { title, author, category, publicationDate, price, description, trending, oldPrice, coverImage } = req.body;
+    const { title, author, category, publicationDate, price, description, trending, oldPrice, coverImage, quantity } = req.body;
     let coverImageUrl = coverImage?.url;
 
     // Validate required fields
@@ -35,10 +35,10 @@ const postABook = async (req, res) => {
       "Nepali Culture & Heritage",
       "Mountaineering & Adventure",
       // Children & Young Adult
-      "Children’s Books",
+      "Children's Books",
       "Young Adult (YA)",
       "Educational",
-      "Nepali Children’s Stories",
+      "Nepali Children's Stories",
       // Special Interest
       "Classics",
       "Poetry",
@@ -87,6 +87,7 @@ const postABook = async (req, res) => {
       description,
       trending: trending === "true" || trending === true,
       oldPrice: oldPrice ? Number(oldPrice) : undefined,
+      quantity: quantity ? Number(quantity) : 0,
     });
 
     await book.save();
@@ -127,8 +128,15 @@ const getSingleBook = async (req, res) => {
 const UpdateBook = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, author, category, publicationDate, price, description, trending, oldPrice } = req.body;
+    const { title, author, category, publicationDate, price, description, trending, oldPrice, quantity } = req.body;
     let coverImageUrl = req.body.coverImage?.url;
+
+    console.log('Update request received:', {
+      id,
+      quantity,
+      quantityType: typeof quantity,
+      hasQuantity: 'quantity' in req.body
+    });
 
     // Upload image if provided
     if (req.file && req.file.buffer) {
@@ -152,11 +160,29 @@ const UpdateBook = async (req, res) => {
       oldPrice: oldPrice ? Number(oldPrice) : undefined,
     };
 
-    // Remove undefined fields
-    Object.keys(updateData).forEach((key) => updateData[key] === undefined && delete updateData[key]);
+    // Handle quantity separately - allow 0 as valid value
+    if ('quantity' in req.body) {
+      updateData.quantity = Number(quantity);
+    }
+
+    // Remove undefined fields (but not 0 values)
+    Object.keys(updateData).forEach((key) => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
+
+    console.log('Final update data:', updateData);
 
     const book = await Book.findByIdAndUpdate(id, updateData, { new: true });
     if (!book) return res.status(404).json({ message: "Book not found" });
+    
+    console.log('Book updated successfully:', {
+      id: book._id,
+      title: book.title,
+      quantity: book.quantity
+    });
+    
     res.status(200).json({ message: "Book updated successfully", book });
   } catch (error) {
     console.error("Error updating book:", error);

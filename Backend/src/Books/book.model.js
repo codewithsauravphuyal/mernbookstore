@@ -46,10 +46,10 @@ const bookSchema = new mongoose.Schema(
         "Nepali Culture & Heritage",
         "Mountaineering & Adventure",
         // Children & Young Adult
-        "Children’s Books",
+        "Children's Books",
         "Young Adult (YA)",
         "Educational",
-        "Nepali Children’s Stories",
+        "Nepali Children's Stories",
         // Special Interest
         "Classics",
         "Poetry",
@@ -72,7 +72,7 @@ const bookSchema = new mongoose.Schema(
       ],
     },
     publicationDate: {
-      type: Number, // Changed to Number to store year only
+      type: Number,
     },
     description: {
       type: String,
@@ -90,6 +90,15 @@ const bookSchema = new mongoose.Schema(
     reviewCount: {
       type: Number,
       default: 0,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    sold: {
+      type: Number,
+      default: 0
     },
   },
   { timestamps: true }

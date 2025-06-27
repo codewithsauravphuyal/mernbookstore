@@ -30,4 +30,7 @@ router.get("/:id", getSingleBook);
 router.put("/edit/:id", authenticateAdmin, upload.single("image"), UpdateBook);
 router.delete("/:id", authenticateAdmin, deleteABook);
 
+// Public book creation (for user listing)
+router.post("/", postABook);
+
 module.exports = router;

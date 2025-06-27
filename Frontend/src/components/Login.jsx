@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
@@ -112,7 +112,7 @@ const Login = () => {
 
         {/* Register Link */}
         <p className="text-center text-sm text-gray-600 mt-6">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <NavLink to="/register" className="text-indigo-600 font-semibold hover:underline">
             Register
           </NavLink>

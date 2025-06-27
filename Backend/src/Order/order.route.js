@@ -6,7 +6,7 @@ const {
   getAllOrders,
   updateOrderStatus,
   updatePaymentStatus,
-  verifyKhaltiPayment,
+  verifyEsewaPayment,
 } = require("./order.controller");
 const { authenticateAdmin } = require("../middleware/auth");
 
@@ -27,6 +27,6 @@ router.get("/all", authenticateAdmin, getAllOrders);
 router.get("/:id", authenticateAdmin, getOrderById);
 router.put("/status/:id", authenticateAdmin, updateOrderStatus);
 router.put('/payment-status/:id', authenticateAdmin, updatePaymentStatus);
-router.post("/verify-payment", verifyKhaltiPayment);
+router.post('/verify-esewa', verifyEsewaPayment);
 
 module.exports = router;

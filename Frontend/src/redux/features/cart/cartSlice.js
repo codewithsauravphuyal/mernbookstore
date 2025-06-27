@@ -11,11 +11,24 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action) => {
       const existingItem = state.cartItem.find(item => item._id === action.payload._id);
+      
       if (!existingItem) {
+        if (action.payload.quantity <= 0) {
+          Swal.fire({
+            position: 'center',
+            icon: 'error',
+            title: 'Out of Stock',
+            text: `${action.payload.title} is currently out of stock.`,
+            showConfirmButton: false,
+            timer: 1500,
+          });
+          return;
+        }
         const itemToAdd = {
           ...action.payload,
           price: Number(action.payload.price || 0),
           category: action.payload.category || 'Other',
+          cartQuantity: 1, // Initialize cartQuantity to 1
         };
         state.cartItem.push(itemToAdd);
         localStorage.setItem('cartItem', JSON.stringify(state.cartItem));
@@ -23,38 +36,31 @@ const cartSlice = createSlice({
           position: 'center',
           icon: 'success',
           title: 'Added to Cart!',
-          text: `${action.payload.title} has been successfully added to your cart.`,
+          text: `${action.payload.title} has been added to your cart.`,
           showConfirmButton: false,
           timer: 1500,
-          customClass: {
-            popup: 'bg-white rounded-xl shadow-2xl',
-            title: 'text-xl font-bold text-gray-800',
-            content: 'text-gray-600',
-          },
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdrop: 'rgba(0, 0, 0, 0.3)',
         });
       } else {
+        if (existingItem.cartQuantity >= action.payload.quantity) {
+          Swal.fire({
+            position: 'center',
+            icon: 'warning',
+            title: 'Maximum Quantity Reached',
+            text: `Only ${action.payload.quantity} units of ${action.payload.title} are available.`,
+            showConfirmButton: false,
+            timer: 1500,
+          });
+          return;
+        }
+        existingItem.cartQuantity += 1;
+        localStorage.setItem('cartItem', JSON.stringify(state.cartItem));
         Swal.fire({
           position: 'center',
-          icon: 'warning',
-          title: 'Item Already in Cart',
-          text: `${action.payload.title} is already in your cart.`,
-          showConfirmButton: true,
-          confirmButtonText: 'OK',
-          confirmButtonColor: '#4F46E5',
-          showCancelButton: true,
-          cancelButtonText: 'Continue Shopping',
-          cancelButtonColor: '#EF4444',
-          customClass: {
-            popup: 'bg-white rounded-xl shadow-2xl',
-            title: 'text-xl font-bold text-gray-800',
-            content: 'text-gray-600',
-            confirmButton: 'px-6 py-2 rounded-lg font-semibold',
-            cancelButton: 'px-6 py-2 rounded-lg font-semibold',
-          },
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdrop: 'rgba(0, 0, 0, 0.3)',
+          icon: 'success',
+          title: 'Quantity Updated',
+          text: `${action.payload.title} quantity increased to ${existingItem.cartQuantity}.`,
+          showConfirmButton: false,
+          timer: 1500,
         });
       }
     },
@@ -70,14 +76,36 @@ const cartSlice = createSlice({
           text: `${itemToRemove.title} has been removed from your cart.`,
           showConfirmButton: false,
           timer: 1500,
-          customClass: {
-            popup: 'bg-white rounded-xl shadow-2xl',
-            title: 'text-xl font-bold text-gray-800',
-            content: 'text-gray-600',
-          },
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdrop: 'rgba(0, 0, 0, 0.3)',
         });
+      }
+    },
+    decreaseCartQuantity: (state, action) => {
+      const item = state.cartItem.find(item => item._id === action.payload._id);
+      if (item) {
+        if (item.cartQuantity > 1) {
+          item.cartQuantity -= 1;
+        } else {
+          state.cartItem = state.cartItem.filter(item => item._id !== action.payload._id);
+        }
+        localStorage.setItem('cartItem', JSON.stringify(state.cartItem));
+      }
+    },
+    increaseCartQuantity: (state, action) => {
+      const item = state.cartItem.find(item => item._id === action.payload._id);
+      if (item) {
+        if (item.cartQuantity >= item.quantity) {
+          Swal.fire({
+            position: 'center',
+            icon: 'warning',
+            title: 'Maximum Quantity Reached',
+            text: `Only ${item.quantity} units of ${item.title} are available.`,
+            showConfirmButton: false,
+            timer: 1500,
+          });
+          return;
+        }
+        item.cartQuantity += 1;
+        localStorage.setItem('cartItem', JSON.stringify(state.cartItem));
       }
     },
     clearCart: (state) => {
@@ -90,18 +118,10 @@ const cartSlice = createSlice({
         text: 'Your cart has been cleared successfully.',
         showConfirmButton: false,
         timer: 1500,
-        customClass: {
-          popup: 'bg-white rounded-xl shadow-2xl',
-          title: 'text-xl font-bold text-gray-800',
-          content: 'text-gray-600',
-        },
-        background: 'rgba(255, 255, 255, 0.95)',
-        backdrop: 'rgba(0, 0, 0, 0.3)',
       });
     },
   },
 });
 
-export const { addToCart, removeToCart, clearCart } = cartSlice.actions;
-
+export const { addToCart, removeToCart, clearCart, decreaseCartQuantity, increaseCartQuantity } = cartSlice.actions;
 export default cartSlice.reducer;

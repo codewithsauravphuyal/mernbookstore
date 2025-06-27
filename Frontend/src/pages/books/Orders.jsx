@@ -1,10 +1,8 @@
-import React from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useGetOrderByEmailQuery } from "../../redux/features/order/ordersApi";
 import { motion } from "framer-motion";
 import { FiAlertCircle, FiShoppingBag, FiCalendar, FiPackage, FiCreditCard, FiMapPin, FiChevronRight } from "react-icons/fi";
 import { FaRegComment } from "react-icons/fa";
-import getImgUrl from "../../utils/getImgUrl";
 import { Link } from "react-router-dom";
 
 const OrderPage = () => {
@@ -96,7 +94,7 @@ const OrderPage = () => {
               <FiShoppingBag className="h-12 w-12 text-gray-400" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
-            <p className="text-gray-500 mb-6">When you place orders, they'll appear here</p>
+            <p className="text-gray-500 mb-6">When you place orders, they&apos;ll appear here</p>
             <Link
               to="/"
               className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -146,24 +144,30 @@ const OrderPage = () => {
                         <FiPackage className="mr-2" /> Items
                       </h4>
                       <div className="flex flex-wrap gap-3">
-                        {order.productIds?.slice(0, 3).map((item) => (
-                          <div key={item._id} className="flex items-center space-x-3">
+                        {order.productIds?.slice(0, 3).map((item, idx) => (
+                          <div key={item?._id || idx} className="flex items-center space-x-3">
                             <img
-                              src={getImgUrl(item.coverImage)}
-                              alt={item.title}
+                              src={item?.coverImage?.url}
+                              alt={item?.title || 'No image'}
                               className="h-12 w-12 rounded-md object-cover border border-gray-200"
                             />
                             <div>
-                              <p className="text-sm font-medium text-gray-900 line-clamp-1">{item.title}</p>
-                              <p className="text-xs text-gray-500">Rs {item.price?.toFixed(2)}</p>
+                              <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                                {item?.title || <span className="text-red-500">This book has been removed</span>}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {item?.price ? `Rs ${item.price?.toFixed(2)}` : ''}
+                              </p>
                               <div className="flex gap-2">
-                                <Link
-                                  to={`/books/${item._id}`}
-                                  className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium text-xs mt-1"
-                                >
-                                  View book details <FiChevronRight className="ml-1" />
-                                </Link>
-                                {order.orderStatus === 'Delivered' && (
+                                {item?._id && item?.title ? (
+                                  <Link
+                                    to={`/books/${item._id}`}
+                                    className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium text-xs mt-1"
+                                  >
+                                    View book details <FiChevronRight className="ml-1" />
+                                  </Link>
+                                ) : null}
+                                {order.orderStatus === 'Delivered' && item?._id && item?.title && (
                                   <Link
                                     to={`/books/${item._id}`}
                                     className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium text-xs mt-1"

@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useGetOrderByEmailQuery } from '../../redux/features/order/ordersApi';
 import getImgUrl from '../../utils/getImgUrl';
-import { clearCart, removeToCart } from '../../redux/features/cart/cartSlice';
+import { clearCart, removeToCart, decreaseCartQuantity, increaseCartQuantity } from '../../redux/features/cart/cartSlice';
 import { motion } from 'framer-motion';
-import { FiTrash2 } from 'react-icons/fi';
+import { FiTrash2, FiMinus, FiPlus } from 'react-icons/fi';
 
 const CartBook = () => {
   const dispatch = useDispatch();
@@ -16,25 +16,31 @@ const CartBook = () => {
     skip: !currentUser?.email,
   });
 
-  console.log('Cart Items:', cartItems);
-  console.log('Orders:', orders);
-
   const totalPrice = cartItems
     .reduce((acc, item) => {
       const price = Number(item.price || 0);
-      return acc + (isNaN(price) ? 0 : price);
+      return acc + (isNaN(price) ? 0 : price * item.cartQuantity);
     }, 0)
     .toFixed(2);
 
-  const handleClearCart = (product) => {
+  const totalItems = cartItems.reduce((total, item) => total + item.cartQuantity, 0);
+
+  const handleRemoveFromCart = (product) => {
     dispatch(removeToCart(product));
   };
 
-  const handleDeleteCart = () => {
+  const handleDecreaseQuantity = (product) => {
+    dispatch(decreaseCartQuantity(product));
+  };
+
+  const handleIncreaseQuantity = (product) => {
+    dispatch(increaseCartQuantity(product));
+  };
+
+  const handleClearCart = () => {
     dispatch(clearCart());
   };
 
-  // Map cart items to their latest order details
   const getOrderDetails = (productId) => {
     for (const order of orders) {
       if (order.productIds.some(item => item._id === productId)) {
@@ -67,7 +73,7 @@ const CartBook = () => {
           </motion.h2>
           {cartItems.length > 0 && (
             <motion.button
-              onClick={handleDeleteCart}
+              onClick={handleClearCart}
               className="bg-red-500 text-white py-2 px-5 rounded-full font-semibold flex items-center gap-2 hover:bg-red-600 transition-all duration-300 shadow"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -117,31 +123,37 @@ const CartBook = () => {
                           {product.title}
                         </Link>
                         <p className="text-lg font-bold text-indigo-600 mt-2 md:mt-0">
-                          Rs {isNaN(price) ? '0.00' : price.toFixed(2)}
+                          Rs {isNaN(price) ? '0.00' : (price * product.cartQuantity).toFixed(2)}
                         </p>
                       </div>
                       <p className="text-sm text-gray-600 mt-2">
                         <strong>Category:</strong> <span className="capitalize bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">{product.category}</span>
                       </p>
-                      {/* {orderDetails && (
-                        <div className="text-sm text-gray-600 mt-2 space-y-1">
-                          <p>
-                            <strong>Payment Method:</strong> <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">{orderDetails.paymentMethod}</span>
-                          </p>
-                          <p>
-                            <strong>Payment Status:</strong> <span className={`px-2 py-1 rounded-full ${orderDetails.paymentStatus === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{orderDetails.paymentStatus}</span>
-                          </p>
-                          <p>
-                            <strong>Order Status:</strong> <span className={`px-2 py-1 rounded-full ${orderDetails.orderStatus === 'Delivered' ? 'bg-green-100 text-green-700' : orderDetails.orderStatus === 'Cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{orderDetails.orderStatus}</span>
-                          </p>
-                        </div>
-                      )} */}
+                      <p className="text-sm text-gray-600 mt-1">
+                        <strong>Available:</strong> {product.quantity} | <strong>In Cart:</strong> {product.cartQuantity}
+                      </p>
                       <div className="flex items-center justify-between mt-4">
-                        <p className="text-gray-600">
-                          <strong>Qty:</strong> 1
-                        </p>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleDecreaseQuantity(product)}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full hover:bg-gray-300 transition disabled:opacity-50"
+                            disabled={product.cartQuantity <= 1}
+                          >
+                            <FiMinus className="text-gray-700" />
+                          </button>
+                          <span className="text-gray-700 font-medium w-6 text-center">
+                            {product.cartQuantity}
+                          </span>
+                          <button
+                            onClick={() => handleIncreaseQuantity(product)}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full hover:bg-gray-300 transition disabled:opacity-50"
+                            disabled={product.cartQuantity >= product.quantity}
+                          >
+                            <FiPlus className="text-gray-700" />
+                          </button>
+                        </div>
                         <motion.button
-                          onClick={() => handleClearCart(product)}
+                          onClick={() => handleRemoveFromCart(product)}
                           className="text-red-500 hover:text-red-600 font-semibold flex items-center gap-1"
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
@@ -179,7 +191,11 @@ const CartBook = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <div className="flex justify-between items-center text-xl font-semibold text-gray-900">
+            <div className="flex justify-between items-center text-lg font-semibold text-gray-900 mb-2">
+              <span>Total Items</span>
+              <span>{totalItems}</span>
+            </div>
+            <div className="flex justify-between items-center text-xl font-semibold text-gray-900 mb-4">
               <span>Subtotal</span>
               <span>Rs {totalPrice}</span>
             </div>

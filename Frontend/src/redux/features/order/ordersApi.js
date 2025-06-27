@@ -72,13 +72,13 @@ const ordersApi = createApi({
         { type: "Order", id },
       ],
     }),
-    verifyKhaltiPayment: builder.mutation({
-      query: (paymentData) => ({
-        url: "/verify-payment",
-        method: "POST",
-        body: paymentData,
+    verifyEsewaPayment: builder.mutation({
+      query: (data) => ({
+        url: '/verify-esewa',
+        method: 'POST',
+        body: data,
       }),
-      invalidatesTags: ["Orders"],
+      invalidatesTags: ['Orders'],
     }),
   }),
 });
@@ -90,7 +90,7 @@ export const {
   useCreateOrderMutation,
   useUpdateOrderStatusMutation,
   useUpdatePaymentStatusMutation, // Added export
-  useVerifyKhaltiPaymentMutation,
+  useVerifyEsewaPaymentMutation,
 } = ordersApi;
 
 export default ordersApi;

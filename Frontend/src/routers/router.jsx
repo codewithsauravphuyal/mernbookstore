@@ -6,6 +6,7 @@ import CartBook from "../pages/books/CartBook";
 import CheckOut from "../pages/books/CheckOut";
 import SingleBook from "../pages/books/SingleBook";
 import Orders from "../pages/books/Orders";
+import UserProfile from "../pages/UserProfile";
 import ManageBook from "../pages/DashBoard/ManageBook/ManageBook";
 import AddBook from "../pages/DashBoard/AddBook/AddBook";
 import AdminLogin from "../components/AdminLogin";
@@ -21,6 +22,8 @@ import UserList from "../pages/DashBoard/UserList";
 import OrderList from "../pages/DashBoard/OrderList";
 import OrderDetails from "../pages/DashBoard/OrderDetails";
 import ReviewList from "../pages/DashBoard/ReviewList";
+import ProductChat from "../components/ProductChat";
+import AdminChat from "../pages/DashBoard/AdminChat";
 
 const router = createBrowserRouter([
   {
@@ -71,6 +74,18 @@ const router = createBrowserRouter([
           </PrivateRoutes>
         ),
       },
+      {
+        path: "/profile",
+        element: (
+          <PrivateRoutes>
+            <UserProfile />
+          </PrivateRoutes>
+        ),
+      },
+      {
+        path: "/chat/:productId",
+        element: <ProductChat />,
+      },
     ],
   },
   {
@@ -120,6 +135,10 @@ const router = createBrowserRouter([
       {
         path: "orders/*",
         element: <Navigate to="/dashboard/orders" replace />,
+      },
+      {
+        path: "chats",
+        element: <AdminChat />,
       },
     ],
   },

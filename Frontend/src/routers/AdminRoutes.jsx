@@ -1,4 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
+import PropTypes from 'prop-types';
 
 const AdminRoutes = ({ children }) => {
   const token = localStorage.getItem("token"); // Retrieve the token
@@ -11,6 +12,10 @@ const AdminRoutes = ({ children }) => {
 
   // If authenticated, render the child 
   return children?children:<Outlet/>
+};
+
+AdminRoutes.propTypes = {
+  children: PropTypes.node.isRequired,
 };
 
 export default AdminRoutes;

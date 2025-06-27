@@ -239,4 +239,88 @@ router.patch('/users/:id/role', isAdmin, async (req, res) => {
   }
 });
 
+// Middleware to verify user token
+const verifyToken = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token provided' });
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    req.user = user;
+    next();
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(401).json({ message: 'Invalid or expired token' });
+  }
+};
+
+// Get user profile
+router.get('/profile', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ message: 'Failed to fetch profile' });
+  }
+});
+
+// Update user profile
+router.put('/profile', verifyToken, async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      phone,
+      shippingAddress
+    } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update fields if provided
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
+    if (phone !== undefined) user.phone = phone;
+    if (shippingAddress !== undefined) {
+      user.shippingAddress = {
+        ...user.shippingAddress,
+        ...shippingAddress
+      };
+    }
+
+    await user.save();
+    
+    const updatedUser = await User.findById(user._id).select('-password');
+    res.status(200).json({ 
+      message: 'Profile updated successfully', 
+      user: updatedUser 
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Failed to update profile' });
+  }
+});
+
+// Get user by ID (admin only)
+router.get('/users/:id', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Failed to fetch user' });
+  }
+});
+
 module.exports = router;

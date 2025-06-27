@@ -1,20 +1,86 @@
 const mongoose = require('mongoose');
 const Order = require('./order.model');
+const Book = require('../Books/book.model');
 const axios = require('axios');
 require('dotenv').config();
 
 const createAOrder = async (req, res) => {
   try {
+    const { productIds, quantities } = req.body; // Expect quantities array in request body
+
+    if (!quantities || productIds.length !== quantities.length) {
+      return res.status(400).json({
+        message: 'Quantities must be provided for each product ID',
+      });
+    }
+
+    // Fetch all products
+    const products = await Book.find({ _id: { $in: productIds } });
+
+    // Create a map of product IDs to their details
+    const productMap = products.reduce((map, product) => {
+      map[product._id.toString()] = product;
+      return map;
+    }, {});
+
+    // Validate stock for each product
+    const outOfStockProducts = [];
+    const orderItems = productIds.map((id, index) => {
+      const product = productMap[id];
+      const qty = Number(quantities[index]);
+      if (!product) {
+        outOfStockProducts.push({ id, title: 'Unknown Product', reason: 'Not found' });
+      } else if (product.quantity < qty || qty <= 0) {
+        outOfStockProducts.push({ id, title: product.title, reason: 'Insufficient stock or invalid quantity' });
+      }
+      return { id, qty };
+    });
+
+    if (outOfStockProducts.length > 0) {
+      return res.status(400).json({
+        message: 'Some items are out of stock or invalid',
+        outOfStock: outOfStockProducts,
+      });
+    }
+
+    // Calculate total price
+    const totalPrice = orderItems.reduce((sum, item) => {
+      const product = productMap[item.id];
+      return sum + (product.price * item.qty);
+    }, 0);
+
+    // Create the order
     const newOrder = new Order({
       ...req.body,
+      productIds: productIds, // Store as array of ObjectIds
+      quantities, // Store quantities
+      totalPrice,
       paymentStatus: req.body.paymentMethod === 'COD' ? 'Pending' : 'Pending',
       orderStatus: 'Pending',
     });
+
     const savedOrder = await newOrder.save();
+
+    // Update product quantities and sold counts
+    for (const item of orderItems) {
+      await Book.updateOne(
+        { _id: item.id },
+        {
+          $inc: {
+            quantity: -item.qty,
+            sold: item.qty
+          }
+        }
+      );
+    }
+
     res.status(201).json(savedOrder);
   } catch (error) {
     console.error('Error creating order:', error);
-    res.status(500).json({ message: 'Failed to create an order', error: error.message });
+    res.status(500).json({
+      message: 'Failed to create order',
+      error: error.message
+    });
   }
 };
 
@@ -96,16 +162,17 @@ const updateOrderStatus = async (req, res) => {
       }
     }
 
-    // Validation for Khalti (online) payments
-    if (order.paymentMethod === "Khalti") {
-      // Khalti orders must have payment completed before any status change
-      if (order.paymentStatus !== "Completed") {
+    // Validation for eSewa (online) payments
+    if (order.paymentMethod === "eSewa") {
+      // eSewa orders must have payment completed before any status change
+      if (order.paymentStatus !== "Paid") {
         return res.status(400).json({
-          message: "Khalti orders must have completed payment before updating order status."
+          success: false,
+          message: "eSewa orders must have completed payment before updating order status."
         });
       }
-
-      // Additional validation for Khalti orders:
+      
+      // Additional validation for eSewa orders:
       // - Can't be marked Delivered if not yet Shipped
       if (orderStatus === "Delivered" && order.orderStatus !== "Shipped") {
         return res.status(400).json({
@@ -165,13 +232,13 @@ const updatePaymentStatus = async (req, res) => {
     if (order.paymentMethod === 'COD') {
       console.log(`COD order, current payment status: ${order.paymentStatus}`);
       if (order.paymentStatus === 'Completed') {
-        return res.status(400).json({ 
-          message: 'COD payment already marked as completed' 
+        return res.status(400).json({
+          message: 'COD payment already marked as completed'
         });
       }
       if (paymentStatus !== 'Completed') {
-        return res.status(400).json({ 
-          message: 'COD payments can only be marked as Completed' 
+        return res.status(400).json({
+          message: 'COD payments can only be marked as Completed'
         });
       }
     }
@@ -179,7 +246,7 @@ const updatePaymentStatus = async (req, res) => {
     order.paymentStatus = paymentStatus;
     const updatedOrder = await order.save();
     console.log(`Payment status updated to ${paymentStatus} for order ID: ${id}`);
-    
+
     res.status(200).json(updatedOrder);
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Error updating payment status:`, {
@@ -192,37 +259,60 @@ const updatePaymentStatus = async (req, res) => {
   }
 };
 
-
-const verifyKhaltiPayment = async (req, res) => {
+// Verify eSewa payment
+const verifyEsewaPayment = async (req, res) => {
   try {
-    const { token, amount, orderId } = req.body;
-    if (!mongoose.Types.ObjectId.isValid(orderId)) {
-      return res.status(400).json({ message: 'Invalid order ID format' });
+    const { orderId, transactionId, amount } = req.body;
+
+    if (!orderId || !transactionId || !amount) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required payment verification data"
+      });
     }
-    const response = await axios.post(
-      'https://khalti.com/api/v2/payment/verify/',
-      { token, amount },
-      {
-        headers: {
-          Authorization: `Key ${process.env.KHALTI_SECRET_KEY}`,
-        },
-      }
-    );
-    if (response.data.state.name === 'Completed') {
-      const order = await Order.findById(orderId);
-      if (!order) {
-        return res.status(404).json({ message: 'Order not found' });
-      }
-      order.paymentStatus = 'Completed';
-      order.orderStatus = 'Processing';
-      await order.save();
-      res.status(200).json({ message: 'Payment verified successfully', order });
-    } else {
-      res.status(400).json({ message: 'Payment verification failed' });
+
+    // Find the order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
     }
+
+    // Verify payment amount matches order total
+    if (order.totalAmount !== amount) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment amount mismatch"
+      });
+    }
+
+    // Update order with payment details
+    order.paymentStatus = "Paid";
+    order.paymentMethod = "eSewa";
+    order.paymentDetails = {
+      transactionId,
+      paymentDate: new Date(),
+      paymentMethod: "eSewa"
+    };
+    order.orderStatus = "Confirmed";
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Payment verified successfully",
+      order
+    });
+
   } catch (error) {
-    console.error('Error verifying payment:', error);
-    res.status(500).json({ message: 'Failed to verify payment', error: error.message });
+    console.error("eSewa payment verification error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Payment verification failed",
+      error: error.message
+    });
   }
 };
 
@@ -232,6 +322,6 @@ module.exports = {
   getOrderById,
   getAllOrders,
   updateOrderStatus,
-  verifyKhaltiPayment,
+  verifyEsewaPayment,
   updatePaymentStatus,
 };

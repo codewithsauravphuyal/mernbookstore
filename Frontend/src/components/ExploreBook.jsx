@@ -1,4 +1,3 @@
-import React from "react";
 import { useFetchAllBooksQuery } from "../redux/features/Books/BookApi";
 import getImgUrl from "../utils/getImgUrl";
 import { useDispatch } from "react-redux";

@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
-import Swal from "sweetalert2";
-import axios from "axios";
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import axios from 'axios';
 import {
   useFetchbookbyIdQuery,
   useUpdateBookMutation,
-} from "../../../redux/features/Books/BookApi";
-import getBaseUrl from "../../../utils/getBaseUrl";
-import Loading from "../../../components/Loading";
-import InputField from "../AddBook/InputField";
-import SelectField from "../AddBook/SelectField";
+} from '../../../redux/features/Books/BookApi';
+import getBaseUrl from '../../../utils/getBaseUrl';
+import Loading from '../../../components/Loading';
+import InputField from '../AddBook/InputField';
+import SelectField from '../AddBook/SelectField';
 
 const UpdateBook = () => {
   const { id } = useParams();
@@ -27,15 +27,16 @@ const UpdateBook = () => {
 
   useEffect(() => {
     if (bookData) {
-      setValue("title", bookData.title);
-      setValue("author", bookData.author);
-      setValue("category", bookData.category);
-      setValue("publicationYear", bookData.publicationYear || "");
-      setValue("price", bookData.price);
-      setValue("description", bookData.description);
-      setValue("trending", bookData.trending);
-      setValue("oldPrice", bookData.oldPrice);
-      setValue("coverImage", bookData.coverImage?.url || "");
+      setValue('title', bookData.title);
+      setValue('author', bookData.author);
+      setValue('category', bookData.category);
+      setValue('publicationYear', bookData.publicationYear || '');
+      setValue('price', bookData.price);
+      setValue('description', bookData.description);
+      setValue('trending', bookData.trending);
+      setValue('oldPrice', bookData.oldPrice);
+      setValue('quantity', bookData.quantity);
+      setValue('coverImage', bookData.coverImage?.url || '');
     }
   }, [bookData, setValue]);
 
@@ -43,17 +44,17 @@ const UpdateBook = () => {
     setUploading(true);
     try {
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append('image', file);
       const response = await axios.post(`${getBaseUrl()}/api/books/upload/image`, formData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
       setUploading(false);
       return response.data.imageUrl;
     } catch (error) {
       setUploading(false);
-      throw new Error(error.response?.data?.message || "Failed to upload image");
+      throw new Error(error.response?.data?.message || 'Failed to upload image');
     }
   };
 
@@ -65,16 +66,16 @@ const UpdateBook = () => {
         coverImageUrl = await handleFileUpload(coverImageFile);
       } catch (error) {
         Swal.fire({
-          title: "Error",
+          title: 'Error',
           text: error.message,
-          icon: "error",
-          confirmButtonColor: "#EF4444",
+          icon: 'error',
+          confirmButtonColor: '#EF4444',
         });
         return;
       }
     }
 
-    const updateBookData = {
+    const updateData = {
       title: data.title,
       author: data.author,
       category: data.category,
@@ -84,23 +85,24 @@ const UpdateBook = () => {
       description: data.description,
       trending: data.trending,
       oldPrice: data.oldPrice ? Number(data.oldPrice) : undefined,
+      quantity: Number(data.quantity),
     };
 
     try {
-      await updateBook({ id, ...updateBookData }).unwrap();
+      await updateBook({ id, ...updateData }).unwrap();
       Swal.fire({
-        title: "Book Updated",
-        text: "Your book was updated successfully!",
-        icon: "success",
-        confirmButtonColor: "#4F46E5",
+        title: 'Book Updated',
+        text: `${data.title} was updated successfully with ${data.quantity} units in stock!`,
+        icon: 'success',
+        confirmButtonColor: '#4F46E5',
       });
       refetch();
     } catch (error) {
       Swal.fire({
-        title: "Error",
-        text: error.data?.message || "Failed to update book",
-        icon: "error",
-        confirmButtonColor: "#EF4444",
+        title: 'Error',
+        text: error.data?.message || 'Failed to update book',
+        icon: 'error',
+        confirmButtonColor: '#EF4444',
       });
     }
   };
@@ -111,7 +113,6 @@ const UpdateBook = () => {
 
   const categoryOptions = [
     { value: '', label: 'Choose A Category', disabled: true },
-    // Fiction
     { value: 'General Fiction', label: 'General Fiction' },
     { value: 'Historical Fiction', label: 'Historical Fiction' },
     { value: 'Mystery & Thriller', label: 'Mystery & Thriller' },
@@ -121,7 +122,6 @@ const UpdateBook = () => {
     { value: 'Horror', label: 'Horror' },
     { value: 'Nepali Folk Tales', label: 'Nepali Folk Tales' },
     { value: 'Nepali Historical Fiction', label: 'Nepali Historical Fiction' },
-    // Non-Fiction
     { value: 'Biography & Memoir', label: 'Biography & Memoir' },
     { value: 'Self-Help', label: 'Self-Help' },
     { value: 'History', label: 'History' },
@@ -131,12 +131,10 @@ const UpdateBook = () => {
     { value: 'Religion & Spirituality', label: 'Religion & Spirituality' },
     { value: 'Nepali Culture & Heritage', label: 'Nepali Culture & Heritage' },
     { value: 'Mountaineering & Adventure', label: 'Mountaineering & Adventure' },
-    // Children & Young Adult
-    { value: 'Children’s Books', label: 'Children’s Books' },
+    { value: "Children's Books", label: "Children's Books" },
     { value: 'Young Adult (YA)', label: 'Young Adult (YA)' },
     { value: 'Educational', label: 'Educational' },
-    { value: 'Nepali Children’s Stories', label: 'Nepali Children’s Stories' },
-    // Special Interest
+    { value: "Nepali Children's Stories", label: "Nepali Children's Stories" },
     { value: 'Classics', label: 'Classics' },
     { value: 'Poetry', label: 'Poetry' },
     { value: 'Graphic Novels', label: 'Graphic Novels' },
@@ -144,14 +142,12 @@ const UpdateBook = () => {
     { value: 'Art & Photography', label: 'Art & Photography' },
     { value: 'Nepali Literature', label: 'Nepali Literature' },
     { value: 'Travel & Tourism', label: 'Travel & Tourism' },
-    // Religion
     { value: 'Hinduism', label: 'Hinduism' },
     { value: 'Buddhism', label: 'Buddhism' },
     { value: 'Islam', label: 'Islam' },
     { value: 'Christianity', label: 'Christianity' },
     { value: 'Other Religions', label: 'Other Religions' },
     { value: 'Nepali Spiritual Traditions', label: 'Nepali Spiritual Traditions' },
-    // Academic
     { value: 'Textbooks', label: 'Textbooks' },
     { value: 'Reference Books', label: 'Reference Books' },
     { value: 'Research & Essays', label: 'Research & Essays' },
@@ -175,18 +171,16 @@ const UpdateBook = () => {
               placeholder="Enter book title"
               register={register}
               error={errors.title}
-              rules={{ required: "Book title is required" }}
+              rules={{ required: 'Book title is required' }}
             />
-
             <InputField
               label="Authors"
               name="author"
               placeholder="Enter author name"
               register={register}
               error={errors.author}
-              rules={{ required: "Author is required" }}
+              rules={{ required: 'Author is required' }}
             />
-
             <SelectField
               label="Category"
               name="category"
@@ -194,11 +188,10 @@ const UpdateBook = () => {
               register={register}
               error={errors.category}
               rules={{
-                required: "Category is required",
-                validate: (value) => value !== "" || "Please select a valid category",
+                required: 'Category is required',
+                validate: (value) => value !== '' || 'Please select a valid category',
               }}
             />
-
             <InputField
               label="Publication Year"
               name="publicationYear"
@@ -209,11 +202,10 @@ const UpdateBook = () => {
               rules={{
                 pattern: {
                   value: /^\d{4}$/,
-                  message: "Enter a valid 4-digit year",
+                  message: 'Enter a valid 4-digit year',
                 },
               }}
             />
-
             <InputField
               label="Description"
               name="description"
@@ -222,16 +214,14 @@ const UpdateBook = () => {
               register={register}
               error={errors.description}
             />
-
             <div className="flex items-center space-x-4">
               <input
                 type="checkbox"
-                {...register("trending")}
+                {...register('trending')}
                 className="w-6 h-6 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
               />
               <label className="text-base font-medium text-gray-700">Mark as trending</label>
             </div>
-
             <InputField
               label="Old Price"
               name="oldPrice"
@@ -239,9 +229,8 @@ const UpdateBook = () => {
               placeholder="Old Price"
               register={register}
               error={errors.oldPrice}
-              rules={{ min: { value: 0, message: "Price cannot be negative" }}}
+              rules={{ min: { value: 0, message: 'Price cannot be negative' } }}
             />
-
             <InputField
               label="Price"
               name="price"
@@ -249,15 +238,24 @@ const UpdateBook = () => {
               placeholder="Enter price"
               register={register}
               error={errors.price}
-              rules={{ 
-                required: "Price is required", 
-                min: { 
-                  value: 0, 
-                  message: "Price cannot be negative" 
-                }
+              rules={{
+                required: 'Price is required',
+                min: { value: 0, message: 'Price cannot be negative' },
               }}
             />
-
+            <InputField
+              label="Quantity Available"
+              name="quantity"
+              type="number"
+              placeholder="Enter available quantity"
+              register={register}
+              error={errors.quantity}
+              rules={{
+                required: 'Quantity is required',
+                min: { value: 1, message: 'Quantity must be at least 1' },
+                valueAsNumber: true,
+              }}
+            />
             <div>
               <label className="block text-base font-medium text-gray-700 mb-2">Cover Image</label>
               <input
@@ -276,7 +274,7 @@ const UpdateBook = () => {
                 error={errors.coverImage}
                 rules={{
                   validate: (value) =>
-                    !value || /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))$/.test(value) || "Invalid image URL",
+                    !value || /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))$/.test(value) || 'Invalid image URL',
                 }}
               />
               {bookData.coverImage?.url && (
@@ -288,7 +286,6 @@ const UpdateBook = () => {
               )}
               {uploading && <p className="text-gray-500 text-sm mt-2">Uploading image...</p>}
             </div>
-
             <button
               type="submit"
               disabled={uploading}

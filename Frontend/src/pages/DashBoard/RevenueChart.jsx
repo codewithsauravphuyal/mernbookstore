@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Chart as ChartJS,
   BarElement,
@@ -9,6 +8,7 @@ import {
   Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
+import PropTypes from 'prop-types';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
 
@@ -93,6 +93,10 @@ const RevenueChart = ({ monthlySales }) => {
   };
 
   return <Bar data={data} options={options} />;
+};
+
+RevenueChart.propTypes = {
+  monthlySales: PropTypes.array.isRequired,
 };
 
 export default RevenueChart;

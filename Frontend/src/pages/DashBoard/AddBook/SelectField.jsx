@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types';
+
 const SelectField = ({ label, name, options, register, error, rules }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700">{label}</label>
@@ -16,4 +18,14 @@ const SelectField = ({ label, name, options, register, error, rules }) => (
     {error && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
   </div>
 );
+
+SelectField.propTypes = {
+  label: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  options: PropTypes.array.isRequired,
+  register: PropTypes.func.isRequired,
+  error: PropTypes.object,
+  rules: PropTypes.object,
+};
+
 export default SelectField;

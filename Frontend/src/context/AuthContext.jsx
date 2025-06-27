@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import getBaseUrl from '../utils/getBaseUrl';
 import Swal from 'sweetalert2';
+import PropTypes from 'prop-types';
 
 const AuthContext = createContext();
 
@@ -98,6 +99,14 @@ const AuthManager = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+AuthManager.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
 export const AuthProvider = ({ children }) => {
   return <AuthManager>{children}</AuthManager>;
+};
+
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 };

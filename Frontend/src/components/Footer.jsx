@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Typography } from "@material-tailwind/react";
 import { NavLink } from "react-router-dom";

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import BookCard from "../books/BookCard";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { motion } from "framer-motion";

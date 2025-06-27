@@ -10,6 +10,7 @@ const orderRoutes = require('./src/Order/order.route');
 const userRoutes = require('./src/user/user.route');
 const reviewRoutes = require('./src/Review/review.route');
 const AdminRoutes = require('./src/stats/Admin.stats');
+const chatRoutes = require('./src/Chat/chat.route');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -34,6 +35,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/auth', userRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', AdminRoutes);
+app.use('/api', chatRoutes);
 
 // Database connection
 mongoose.connect(process.env.DB_URL)

@@ -6,11 +6,21 @@ import { MdIncompleteCircle } from "react-icons/md";
 import RevenueChart from "./RevenueChart";
 import StudyTypeChart from "./StudyTypeChart";
 import getBaseUrl from "../../utils/getBaseUrl";
+import ProductChat from '../../components/ProductChat';
+import { useGetChatsQuery } from '../../redux/features/chat/chatApi';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({});
   const navigate = useNavigate();
+  const { data: chatsData } = useGetChatsQuery();
+  const recentMessages = (chatsData?.chats || [])
+    .flatMap(chat => chat.messages?.length ? [{
+      ...chat.messages[chat.messages.length - 1],
+      chat
+    }] : [])
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, 3);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -136,6 +146,9 @@ const Dashboard = () => {
           </div>
         </div>
       </section>
+      <div className="mt-8">
+        {/* Removed Admin Chat and ProductChat as requested */}
+      </div>
     </section>
   );
 };

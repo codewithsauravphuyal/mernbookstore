@@ -1,9 +1,7 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { FaBook, FaUserAlt, FaGlobe } from 'react-icons/fa';
 import romi from "../assets/romi.jpg";
 import yubina from "../assets/yubina.jpg";
-import { NavLink } from 'react-router-dom';
 
 const AboutUs = () => {
   return (
@@ -14,7 +12,7 @@ const AboutUs = () => {
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900">Our Mission</h2>
           <p className="text-gray-600 mt-4 max-w-3xl mx-auto text-lg">
-            At BookHauls, we're dedicated to making books accessible and fostering a global community of passionate readers.
+            At BookHauls, we&apos;re dedicated to making books accessible and fostering a global community of passionate readers.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
