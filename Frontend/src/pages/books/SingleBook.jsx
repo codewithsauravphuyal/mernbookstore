@@ -395,7 +395,11 @@ const SingleBook = () => {
                 </p>
                 <p className="text-gray-700 text-lg">
                   <strong className="text-gray-900">Published:</strong>{" "}
-                  {new Date(book.createdAt).toLocaleDateString()}
+                  {book.publicationDate
+                    ? (typeof book.publicationDate === 'string'
+                        ? new Date(book.publicationDate).getFullYear()
+                        : book.publicationDate)
+                    : (book.createdAt ? new Date(book.createdAt).getFullYear() : '')}
                 </p>
               </div>
 
